@@ -9,6 +9,7 @@ So far only have centralized_exchange Triangular arbitrage bot.
 ### centralized_exchange Triangular Arbitrage Bot
 
  - Add excel functionaltiy
+ - Reinvest Option
  - Research better price models
  - Research more into Bellman Ford
  - Have async for multiple exchanges/arb routes
