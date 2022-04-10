@@ -2,11 +2,12 @@ from pickle import NONE
 import ccxt
 from datetime import datetime
 import pandas as pd
+from ext.excel import *  
 
 
 class CentralizedExchange():
 
-    def __init__(self, exchange_name_, investment_amount_dollars: float, minimum_arbitrage_allowance_dollars: float, fees_per_transaction_percent: float):
+    def __init__(self, exchange_name_, investment_amount_dollars: float, minimum_arbitrage_allowance_dollars: float, fees_per_transaction_percent: float, reinvest_):
         #setting name and definitions for env
         self.exchange_name = exchange_name_
         self.exchange = getattr(ccxt, exchange_name_)()
@@ -14,6 +15,7 @@ class CentralizedExchange():
         self.min_profit = minimum_arbitrage_allowance_dollars
         self.fees = fees_per_transaction_percent
         self.ArbData = pd.DataFrame(columns=['Time', 'Exchange', 'Arbitrage Direction', 'Cryptocurrencies', 'Profit/Loss'])
+        self.reinvest = reinvest_
 
     def GetCurrentPrice(self, ticker):
         current_ticker_details = self.exchange.fetch_ticker(ticker)
@@ -91,7 +93,9 @@ class CentralizedExchange():
                 output_str = "BUY -> SELL -> SELL"
             data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [{pair1,pair2,pair3}], 'Profit/Loss' : [round(final_price-self.investment,4)]}
             data_frame = pd.DataFrame(data)
-            self.ArbData.append(data_frame)
+            #self.ArbData.append(data_frame)
+            with pd.ExcelWriter("data/Triangular_Arbitrage.xlsx", mode = "a", engine="openpyxl", if_sheet_exists='overlay') as writer:
+                data_frame.to_excel(writer, sheet_name="Binance", header=None, index=False)
             print(data_frame.to_markdown())
             print("###########################################")
 

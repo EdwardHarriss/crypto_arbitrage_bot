@@ -7,10 +7,13 @@ if __name__ == "__main__":
     minimum_arbitrage_allowance_dollars = 0.5
     fees_per_transaction_percent = 0.075
 
+    reinvest = True
 
-    Binance = CentralizedExchange('binance', investment_amount_dollars, minimum_arbitrage_allowance_dollars, fees_per_transaction_percent)
+
+    Binance = CentralizedExchange('binance', investment_amount_dollars, minimum_arbitrage_allowance_dollars, fees_per_transaction_percent, reinvest)
     ArbData = Binance.ArbData
-    append_df_to_excel('data/Triangular_Arbitrage.xlsx', ArbData, index=False)
+    with pd.ExcelWriter("data/Triangular_Arbitrage.xlsx", mode = "a", engine="openpyxl", if_sheet_exists='overlay') as writer:
+        ArbData.to_excel(writer, sheet_name="Binance", index=False)
 
     Binance.GetArbitragePosibilities('USDT')
     Binance.GetArbitrage()
