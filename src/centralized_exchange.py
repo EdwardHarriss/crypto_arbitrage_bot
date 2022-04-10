@@ -3,6 +3,9 @@ import ccxt
 from datetime import datetime
 import pandas as pd
 from ext.excel import *  
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import load_workbook
+
 
 
 class CentralizedExchange():
@@ -14,7 +17,6 @@ class CentralizedExchange():
         self.investment = investment_amount_dollars
         self.min_profit = minimum_arbitrage_allowance_dollars
         self.fees = fees_per_transaction_percent
-        self.ArbData = pd.DataFrame(columns=['Time', 'Exchange', 'Arbitrage Direction', 'Cryptocurrencies', 'Profit/Loss'])
         self.reinvest = reinvest_
 
     def GetCurrentPrice(self, ticker):
@@ -91,11 +93,15 @@ class CentralizedExchange():
                 output_str = "BUY -> BUY -> SELL"
             else:
                 output_str = "BUY -> SELL -> SELL"
-            data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [{pair1,pair2,pair3}], 'Profit/Loss' : [round(final_price-self.investment,4)]}
+            output_pair_str = "{} -> {} -> {}".format(pair1, pair2, pair3)
+            data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [output_pair_str], 'Initial Investment' : [self.investment], 'Profit/Loss' : [round(final_price-self.investment,4)]}
             data_frame = pd.DataFrame(data)
-            #self.ArbData.append(data_frame)
-            with pd.ExcelWriter("data/Triangular_Arbitrage.xlsx", mode = "a", engine="openpyxl", if_sheet_exists='overlay') as writer:
-                data_frame.to_excel(writer, sheet_name="Binance", header=None, index=False)
+
+            wb = load_workbook(filename="data/Triangular_Arbitrage.xlsx")
+            ws = wb[self.exchange_name]
+            for r in dataframe_to_rows(data_frame, index=False, header=False):
+                ws.append(r)
+            wb.save("data/Triangular_Arbitrage.xlsx")
             print(data_frame.to_markdown())
             print("###########################################")
 
