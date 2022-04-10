@@ -13,7 +13,7 @@ class CentralizedExchange():
         self.investment = investment_amount_dollars
         self.min_profit = minimum_arbitrage_allowance_dollars
         self.fees = fees_per_transaction_percent
-        self.history = pd.DataFrame(columns=['Time', 'Exchange', 'Arbitrage Direction', 'Cryptocurrencies', 'Profit/Loss'])
+        self.ArbData = pd.DataFrame(columns=['Time', 'Exchange', 'Arbitrage Direction', 'Cryptocurrencies', 'Profit/Loss'])
 
     def GetCurrentPrice(self, ticker):
         current_ticker_details = self.exchange.fetch_ticker(ticker)
@@ -71,7 +71,6 @@ class CentralizedExchange():
                 self.TriangularArbitrage(p3, p2, p1, 'anticlockwise')
             except ZeroDivisionError: # error thrown if ccxt not updated with value 
                 continue
-            #return output
 
 
     def TriangularArbitrage(self, pair1, pair2, pair3, arb_type):
@@ -92,11 +91,9 @@ class CentralizedExchange():
                 output_str = "BUY -> SELL -> SELL"
             data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [{pair1,pair2,pair3}], 'Profit/Loss' : [round(final_price-self.investment,4)]}
             data_frame = pd.DataFrame(data)
-            #self.history.append(data_frame)
+            self.ArbData.append(data_frame)
             print(data_frame.to_markdown())
             print("###########################################")
-            #return(data_frame)
-        #return(NONE)
 
     def CheckClockWiseArbitrage(self, pair1, pair2, pair3):
         
