@@ -5,6 +5,7 @@ import pandas as pd
 from ext.excel import *  
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
+import random
 
 
 
@@ -13,8 +14,8 @@ class CentralizedExchange():
     def __init__(self, exchange_name_, investment_amount_dollars: float, minimum_arbitrage_allowance_dollars: float, fees_per_transaction_percent: float, reinvest_):
         #setting name and definitions for env
         self.exchange_name = exchange_name_
-        self.exchange = getattr(ccxt, exchange_name_)()
-        self.investment = investment_amount_dollars
+        self.exchange = getattr(ccxt, exchange_name_)({'enableRateLimit': True})
+        self.balance = investment_amount_dollars
         self.min_profit = minimum_arbitrage_allowance_dollars
         self.fees = fees_per_transaction_percent
         self.reinvest = reinvest_
@@ -48,6 +49,7 @@ class CentralizedExchange():
                                     'ticker':sym2_token1,
                                 }
                                 self.combinations.append(combination)
+        random.shuffle(self.combinations)
 
     def GetArbitrage(self):
         for combination in self.combinations:
@@ -79,6 +81,8 @@ class CentralizedExchange():
 
     def TriangularArbitrage(self, pair1, pair2, pair3, arb_type):
 
+        print(pair1 + " + " + pair2 + " + " + pair3)
+
         final_price = 0.0
         if(arb_type == 'clockwise'):
             final_price = self.CheckClockWiseArbitrage(pair1, pair2, pair3)
@@ -87,14 +91,14 @@ class CentralizedExchange():
             final_price = self.CheckAnticlockWiseArbitrage(pair1, pair2, pair3)
             
         profit_loss = self.CheckProfit(final_price)
-
+        
         if profit_loss>0:
             if(arb_type == 'clockwise'):
                 output_str = "BUY -> BUY -> SELL"
             else:
                 output_str = "BUY -> SELL -> SELL"
             output_pair_str = "{} -> {} -> {}".format(pair1, pair2, pair3)
-            data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [output_pair_str], 'Initial Investment' : [self.investment], 'Profit/Loss' : [round(final_price-self.investment,4)]}
+            data = {'Time' : [datetime.now().strftime('%H:%M:%S')], 'Exchange' : [self.exchange_name], 'Arbitrage Direction' : [output_str], 'Cryptocurrency Pairs' : [output_pair_str], 'Initial Investment' : [self.balance], 'Profit/Loss' : [round(final_price-self.balance,4)]}
             data_frame = pd.DataFrame(data)
 
             wb = load_workbook(filename="data/Triangular_Arbitrage.xlsx")
@@ -104,6 +108,9 @@ class CentralizedExchange():
             wb.save("data/Triangular_Arbitrage.xlsx")
             print(data_frame.to_markdown())
             print("###########################################")
+            if self.reinvest:
+                self.balance = self.balance + round(final_price-self.balance,4)
+
 
     def CheckClockWiseArbitrage(self, pair1, pair2, pair3):
         
@@ -111,7 +118,7 @@ class CentralizedExchange():
         final_price = 0
         
         if current_price1 is not None:
-            buy_quantity1 = round(self.investment / current_price1, 8)
+            buy_quantity1 = round(self.balance / current_price1, 8)
                
             current_price2 = self.GetCurrentPrice(pair2)
             if current_price2 is not None:
@@ -131,7 +138,7 @@ class CentralizedExchange():
         final_price = 0
         
         if current_price1 is not None:
-            buy_quantity1 = round(self.investment / current_price1, 8)
+            buy_quantity1 = round(self.balance / current_price1, 8)
                
             current_price2 = self.GetCurrentPrice(pair2)
             if current_price2 is not None:
@@ -146,8 +153,8 @@ class CentralizedExchange():
         return final_price
 
     def CheckProfit(self, final_price):
-        apprx_brokerage = self.fees * self.investment/100 * 3
-        min_profitable_price = self.investment + apprx_brokerage + self.min_profit
+        apprx_brokerage = self.fees * self.balance/100 * 3
+        min_profitable_price = self.balance + apprx_brokerage + self.min_profit
         profit = round(final_price - min_profitable_price,8)
         return profit
 
