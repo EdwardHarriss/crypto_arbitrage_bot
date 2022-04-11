@@ -11,3 +11,4 @@ if __name__ == "__main__":
         Binance = CentralizedExchange('binance', investment_amount_dollars, minimum_arbitrage_allowance_dollars, fees_per_transaction_percent, reinvest)
         Binance.GetArbitragePosibilities('USDT')
         Binance.GetArbitrage()
+        investment_amount_dollars = Binance.balance
