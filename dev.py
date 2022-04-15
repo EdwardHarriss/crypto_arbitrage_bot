@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import numpy as np
 import threading
 import websocket
@@ -8,31 +11,21 @@ import pandas as pd
 
 min_arb = 0.5
 base = 'USDT'
+fee = 0.075
 
 def GetArbitrageReturns(routes, data, date):
     output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain'])
-    for route in routes:        
-        try:
-            print(route)
+    for route in routes:
 
-            p1 = 100/data[route[0]] #* 0.925
-            print(data[route[0]])
-            print(p1)
+        p1 = 100/data[route[0]] * (1- (fee/100))  #buy
+        p2 = p1*data[route[1]] * (1- (fee/100))   #sell
+        p3 = p2*data[route[2]] * (1- (fee/100))   #sell
 
-            p2 = p1*data[route[1]] #* 0.925
-            print(data[route[1]])
-            print(p2)
-
-            p3 = p2*data[route[2]] #* 0.925
-            print(data[route[2]])
-            print(p3)
-
-            gain = p3-gain
-            if gain > 0.0:
-                output_frame = pd.DataFrame({'Time' : [date], 'Exchange' : ['binance'], 'Arbitrage Direction' : ['BUY -> SELL -> SELL'], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain]})
-                output = pd.append(output_frame)
-        except:
-            return output
+        gain = (p3-100)*100
+        if gain > min_arb:
+            output_data = {'Time' : [date], 'Exchange' : ['binance'], 'Arbitrage Direction' : ['BUY -> SELL -> SELL'], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain]}
+            output_frame = pd.DataFrame(output_data)
+            output = output.append(output_frame, ignore_index=False)
     return output
 
 
@@ -47,10 +40,10 @@ def GetArbitrageRoutes(data):
     listings = data.keys()
     routes = []
     for sym1 in listings:
-        if sym1[-len(base):] == base: # good
+        if sym1[-len(base):] == base:
             inter = sym1[:-len(base)]
             for sym2 in listings:
-                if (sym2[:-len(base)] == inter) and (sym2 != sym1): # good
+                if (sym2[:-len(base)] == inter) and (sym2 != sym1):
                     end = sym2[-len(base):]
                     for sym3 in listings:
                         if (end == sym3[:-len(base)]) and (sym3[-len(base):] == base):
@@ -62,7 +55,7 @@ def arbitrage(date, data):
     date = datetime.datetime.utcfromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
     routes = GetArbitrageRoutes(data)
     output = GetArbitrageReturns(routes, data, date)
-    print(output)
+    #print(output.to_markdown())
 
 def on_message(ws, message):
     message = json.loads(message)
