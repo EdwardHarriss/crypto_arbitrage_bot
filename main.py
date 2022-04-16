@@ -1,12 +1,10 @@
 from src.centralized_exchange import CentralizedExchange
 from ext.excel import *
-from src.binance import BinanceExchange
+import src.binance as bi
 
 if __name__ == "__main__":
 
-    binance = BinanceExchange(minimum_arbitrage_allowance_perc = 0.5, fee_per_transaction_percent = 0.075, base_ = 'USDT')
-    binance.GetArbitrage()
-
+    bi.BinanceExchange(minimum_arbitrage_allowance_perc = 0.0, fee_per_transaction_percent = 0.075, base_ = 'USDT')
 
     """
     investment_amount_dollars = 100.0
