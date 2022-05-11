@@ -6,20 +6,10 @@ So far only have centralized_exchange Triangular arbitrage bot.
 
 ## TODO
 
-### centralized_exchange Triangular Arbitrage Bot
-
-- ~~Add excel functionality~~
-- ~~Reinvest Option~~
-- Research better price models
-- Research more into Bellman Ford
-- Have async for multiple exchanges/arb routes
-- Final check before Launching for data collection
+### Centralized Exchanges Triangular Arbitrage Bot
+- Top 5 exchanges (CoinMarketCap Ranking) [x][ ][ ][ ][ ]
+- Which data should be collected, and collection through doc servers
 
 ### Perpetual Futures Bot
 
-- Create bot for singular coin
-- Use Async for multiple
-
 ### Statistical Arbitrage Bot
-
-- Create model for Statistical Arbitrage Bot
