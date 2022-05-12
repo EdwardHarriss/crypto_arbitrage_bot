@@ -6,21 +6,35 @@ import threading
 import websocket
 from datetime import datetime
 import json
+import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from src.cex_trading import CentralizedExchangeTrading as CEX_Trading
 
 def arbitrage_trading(date, data):
+    date_format = datetime.fromtimestamp(date/1000)
     date = datetime.fromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
     date_now = datetime.now()
-    trade, predicted_gain = BinanceTrading.GetArbitrage(data, date)
-    date_after = datetime.now()
-    print(trade)
-    print(predicted_gain)
-    print(date, date_now, date_after, date_after-date_now)
+    #trade, predicted_gain = BinanceTrading.GetArbitrage(data, date)
+    #date_after = datetime.now()
+
+    ##Timing Analysis
+
+    print (date_now-date_format)
+    """
+    delay_recieving_data = date_now-date_format
+    delay_in_arb = date_after-date_now
+    t_df = pd.DataFrame([[predicted_gain], [date_format], [date_now], [delay_recieving_data], [date_after], [delay_in_arb]])
+    wb = load_workbook(filename="data/Trading_Timing.xlsx")
+    ws = wb['Binance Timing']
+    for r in dataframe_to_rows(t_df, index=False, header=False):
+        ws.append(r)
+    wb.save("data/Trading_Timing.xlsx")
+    """
 
 def on_message(ws, message):
     message = json.loads(message)
+    print(datetime.now())
 
     def run(*args):
         arbitrage_trading(message[0]['E'], {m['s']: float(m['c']) for m in message})
