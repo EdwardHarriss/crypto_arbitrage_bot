@@ -1,11 +1,6 @@
-from pickle import NONE
-from datetime import datetime
-from xmlrpc.client import Boolean
-from numpy import isin
 import pandas as pd
-from ext.excel import *  
 
-class CentralizedExchange():
+class CentralizedExchangeData():
 
     def __init__(self, exchange_name_, base_, minimum_arbitrage_allowance_perc: float, fee_per_transaction_percent: float):
         #setting name and definitions for env
