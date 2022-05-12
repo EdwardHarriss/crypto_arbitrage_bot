@@ -1,5 +1,4 @@
 import pandas as pd
-import asyncio
 
 class CentralizedExchangeTrading():
 
@@ -8,8 +7,10 @@ class CentralizedExchangeTrading():
         self.min_arb = minimum_arbitrage_allowance_perc
         self.fee = fee_per_transaction_percent
         self.base = base_
+        self.routes = []
 
-    def GetArbitrageRoutes(self, data, date):
+
+    def GetArbitrage(self, data, date):
         listings = data.keys()
         routes = []
 
@@ -34,10 +35,11 @@ class CentralizedExchangeTrading():
                             if (end == sym3[:-len(end)]) and (sym3[-len(self.base):] == self.base):
                                 routes.append(['buy',sym1,sym2,sym3])
         
-        return self.GetArbitrageReturns(routes, date)
+        self.routes = routes
+        return self.GetArbitrageReturns(data, date)
 
     def GetArbitrageReturns(self, data, date):
-        max_gain = 0
+        max_gain = self.min_arb
         for route in self.routes:
             if route[0] == 'sell':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
@@ -49,11 +51,12 @@ class CentralizedExchangeTrading():
                 p2 = p1/data[route[2]] * (1- (self.fee/100))   #buy
                 p3 = p2*data[route[3]] * (1- (self.fee/100))   #sell
 
-            del route[0]
             gain = p3-100
-            if gain > self.min_arb and gain > max_gain:
+            if gain > max_gain:
 
                 output_route = route
                 max_gain = gain
 
-        return gain
+        if max_gain == 1:
+            return [], -1
+        return output_route, max_gain
