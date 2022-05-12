@@ -4,28 +4,32 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 import signal
 import threading
 import websocket
-import datetime
+from datetime import datetime
 import json
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from src.centralized_exchange import CentralizedExchange as CE
+import pandas as pd
 
 def arbitrage(date, data):
-    date = datetime.datetime.utcfromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
-    routes = Binance.GetArbitrageRoutes(data)
-    output = Binance.GetArbitrageReturns(routes, data, date)
-    wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
-    ws = wb['Binance']
-    for r in dataframe_to_rows(output, index=False, header=False):
-        sr = ' -> '.join([str(elem) for elem in r[3]])
-        r[3] = sr
-        ws.append(r)
-    
-    ws = wb['Binance Occ.']
-    for r in dataframe_to_rows(output, index=False, header=False):
-        occ = [date, 'Binance', len(output)]
-        ws.append(occ)
-    wb.save("data/Triangular_Arbitrage_Binance.xlsx")
+    date = datetime.fromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
+    Binance.GetArbitrageRoutes(data)
+    if not TRADING:
+        output = Binance.GetArbitrageReturns(data, date)
+        wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
+        ws = wb['Binance']
+        for r in dataframe_to_rows(output, index=False, header=False):
+            sr = ' -> '.join([str(elem) for elem in r[3]])
+            r[3] = sr
+            ws.append(r)
+        
+        ws = wb['Binance Occ.']
+        for r in dataframe_to_rows(output, index=False, header=False):
+            occ = [date, 'Binance', len(output)]
+            ws.append(occ)
+        wb.save("data/Triangular_Arbitrage_Binance.xlsx")
+    if TRADING:
+        output = Binance.GetArbitrageReturns(data, date)
 
 def on_message(ws, message):
     message = json.loads(message)
@@ -45,19 +49,25 @@ def on_close(ws, close_status_code, close_msg):
     print(close_msg)
     print("### closed ###")
     print("Trying to Reconnect")
-    BinanceExchange(MIN_ARBITRAGE, FEE, BASE)
+    BinanceExchange(MIN_ARBITRAGE, FEE, BASE, TRADING)
 
 def handler(signum, frame):
+    wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
+    ws = wb['Binance Timing']
+    for r in dataframe_to_rows(Binance.timing_df, index=False, header=False):
+        ws.append(r)
+    wb.save("data/Triangular_Arbitrage_Binance.xlsx")
     print("### closed ###")
     exit(1)
 
 signal.signal(signal.SIGINT, handler)
 
-def BinanceExchange(minimum_arbitrage_allowance_perc, fee_per_transaction_percent, base_):
-    global MIN_ARBITRAGE, FEE, BASE
+def BinanceExchange(minimum_arbitrage_allowance_perc, fee_per_transaction_percent, base_, trading_):
+    global MIN_ARBITRAGE, FEE, BASE, TRADING
     MIN_ARBITRAGE = minimum_arbitrage_allowance_perc
     FEE = fee_per_transaction_percent
     BASE = base_
+    TRADING = trading_
 
     global Binance
     Binance = CE('Binance', base_, minimum_arbitrage_allowance_perc, fee_per_transaction_percent)

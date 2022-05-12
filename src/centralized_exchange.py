@@ -1,5 +1,7 @@
 from pickle import NONE
 from datetime import datetime
+from xmlrpc.client import Boolean
+from numpy import isin
 import pandas as pd
 from ext.excel import *  
 
@@ -11,10 +13,11 @@ class CentralizedExchange():
         self.min_arb = minimum_arbitrage_allowance_perc
         self.fee = fee_per_transaction_percent
         self.base = base_
+        self.timing_df = pd.DataFrame(columns=['route','direction', 'time'])
 
-    def GetArbitrageReturns(self, routes, data, date):
+    def GetArbitrageReturns(self, data, date):
         output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain'])
-        for route in routes:
+        for route in self.routes:
             if route[0] == 'sell':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
                 p2 = p1*data[route[2]] * (1- (self.fee/100))   #sell
@@ -30,9 +33,18 @@ class CentralizedExchange():
             del route[0]
             gain = p3-100
             if gain > self.min_arb:
+
+                sr = ' -> '.join([str(elem) for elem in route])
                 output_data = {'Time' : [date], 'Exchange' : [self.exchange], 'Arbitrage Direction' : [arb_direction], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain]}
                 output_frame = pd.DataFrame(output_data)
                 output = output.append(output_frame, ignore_index=False)
+                
+                timing = pd.DataFrame({'route' : [sr], 'direction' : [arb_direction], 'time' : [date]})
+
+                frames = [self.timing_df, timing]
+                self.timing_df = pd.concat(frames)
+                self.timing_df = self.timing_df.groupby(['route','direction'])['time'].apply(', '.join).reset_index()
+
         print(len(output))
         return output
 
@@ -60,7 +72,7 @@ class CentralizedExchange():
                         for sym3 in listings:
                             if (end == sym3[:-len(end)]) and (sym3[-len(self.base):] == self.base):
                                 routes.append(['buy',sym1,sym2,sym3])
-        return routes
+        self.routes = routes
 
 
 

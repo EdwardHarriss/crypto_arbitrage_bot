@@ -4,7 +4,7 @@ import src.binance as bi
 
 if __name__ == "__main__":
 
-    bi.BinanceExchange(minimum_arbitrage_allowance_perc = 1, fee_per_transaction_percent = 0.1, base_ = 'USDT')
+    bi.BinanceExchange(minimum_arbitrage_allowance_perc = 1, fee_per_transaction_percent = 0.1, base_ = 'USDT', trading_ = False)
 
     """
     investment_amount_dollars = 100.0
