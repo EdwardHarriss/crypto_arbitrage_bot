@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 
 class CentralizedExchangeData():
 
@@ -9,9 +10,10 @@ class CentralizedExchangeData():
         self.fee = fee_per_transaction_percent
         self.base = base_
         self.timing_df = pd.DataFrame(columns=['route','direction', 'time'])
+        self.current_time = None
 
-    def GetArbitrageReturns(self, data, date):
-        output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain'])
+    def GetArbitrageReturns(self, data, date, quantity, volatility):
+        output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain','Volatility'])
         for route in self.routes:
             if route[0] == 'sell':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
@@ -19,26 +21,39 @@ class CentralizedExchangeData():
                 p3 = p2*data[route[3]] * (1- (self.fee/100))   #sell
                 arb_direction = 'BUY -> SELL -> SELL'
 
+                if (data[route[1]]*quantity[route[1]]) <= 100:
+                    p3 = 0
+
+
             if route[0] == 'buy':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
                 p2 = p1/data[route[2]] * (1- (self.fee/100))   #buy
                 p3 = p2*data[route[3]] * (1- (self.fee/100))   #sell
                 arb_direction = 'BUY -> BUY -> SELL'
 
+                if ((data[route[1]]*quantity[route[1]]) <= 100) or ((data[route[2]]*quantity[route[2]]) <= 100):
+                    p3 = 0
+
             del route[0]
             gain = p3-100
             if gain > self.min_arb:
+                
+        
+                vol1 = volatility[route[0]]
+                vol2 = volatility[route[1]]
+                vol3 = volatility[route[2]]
+                ave_vol = (abs(vol1)+abs(vol2)+abs(vol3))/3
 
                 sr = ' -> '.join([str(elem) for elem in route])
-                output_data = {'Time' : [date], 'Exchange' : [self.exchange], 'Arbitrage Direction' : [arb_direction], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain]}
+                output_data = {'Time' : [date], 'Exchange' : [self.exchange], 'Arbitrage Direction' : [arb_direction], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain], 'Volatility' : [ave_vol]}
                 output_frame = pd.DataFrame(output_data)
                 output = output.append(output_frame, ignore_index=False)
                 
-                timing = pd.DataFrame({'route' : [sr], 'direction' : [arb_direction], 'time' : [date]})
+                timing = pd.DataFrame({'Route' : [sr], 'Direction' : [arb_direction], 'Time' : [date]})
 
                 frames = [self.timing_df, timing]
                 self.timing_df = pd.concat(frames)
-                self.timing_df = self.timing_df.groupby(['route','direction'])['time'].apply(', '.join).reset_index()
+                self.timing_df = self.timing_df.groupby(['Route','Direction'])['Time'].apply(', '.join).reset_index()    
 
         print(len(output))
         return output

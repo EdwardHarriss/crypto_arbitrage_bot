@@ -1,3 +1,4 @@
+from pickle import NONE
 import pandas as pd
 
 class CentralizedExchangeTrading():
@@ -10,7 +11,7 @@ class CentralizedExchangeTrading():
         self.routes = []
 
 
-    def GetArbitrage(self, data, date):
+    def GetArbitrage(self, data, date, quantity):
         listings = data.keys()
         routes = []
 
@@ -36,9 +37,10 @@ class CentralizedExchangeTrading():
                                 routes.append(['buy',sym1,sym2,sym3])
         
         self.routes = routes
-        return self.GetArbitrageReturns(data, date)
 
-    def GetArbitrageReturns(self, data, date):
+        return self.GetArbitrageReturns(data, date, quantity)
+
+    def GetArbitrageReturns(self, data, date, quantity):
         max_gain = self.min_arb
         for route in self.routes:
             if route[0] == 'sell':
@@ -46,17 +48,24 @@ class CentralizedExchangeTrading():
                 p2 = p1*data[route[2]] * (1- (self.fee/100))   #sell
                 p3 = p2*data[route[3]] * (1- (self.fee/100))   #sell
 
+                if (data[route[1]]*quantity[route[1]]) <= 100:
+                    p3 = 0
+
             if route[0] == 'buy':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
                 p2 = p1/data[route[2]] * (1- (self.fee/100))   #buy
                 p3 = p2*data[route[3]] * (1- (self.fee/100))   #sell
 
+                if ((data[route[1]]*quantity[route[1]]) <= 100) or ((data[route[2]]*quantity[route[2]]) <= 100):
+                    p3 = 0
+
             gain = p3-100
             if gain > max_gain:
-
-                output_route = route
+                pricing = [data[route[1]], data[route[2]], data[route[3]]]
+                output_route = route + pricing
                 max_gain = gain
 
-        if max_gain == 1:
-            return [], -1
+        if max_gain == self.min_arb:
+            output_route = None
+
         return output_route, max_gain

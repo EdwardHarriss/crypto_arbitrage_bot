@@ -1,9 +1,10 @@
-import src.binance_data as binance_data
+#import src.binance_data as binance_data
 import src.binance_trading as binance_trading
 
 if __name__ == "__main__":
 
-    binance_trading.BinanceExchange(minimum_arbitrage_allowance_perc = 1, fee_per_transaction_percent = 0.1, base_ = 'USDT')
+    binance_trading.BinanceExchange(minimum_arbitrage_allowance_perc = 0.5, fee_per_transaction_percent = 0.1, base_ = 'USDT')
+    #binance_data.BinanceExchange(minimum_arbitrage_allowance_perc = 0.2, fee_per_transaction_percent = 0.1, base_ = 'USDT')
 
     """
     investment_amount_dollars = 100.0
