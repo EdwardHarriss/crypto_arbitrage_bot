@@ -50,8 +50,8 @@ def on_close(ws, close_status_code, close_msg):
     print(close_status_code)
     print(close_msg)
     print("### closed ###")
-    #print("Trying to Reconnect")
-    #BinanceExchange(MIN_ARBITRAGE, FEE, BASE)
+    print("Trying to Reconnect")
+    BinanceExchange(MIN_ARBITRAGE, FEE, BASE)
 
 def handler(sig, frame):
         
