@@ -10,7 +10,7 @@ from datetime import timedelta
 import json
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
-from src.cex_data import CentralizedExchangeData as CEX_Data
+from src.triangular_arbitrage.cex_data import CentralizedExchangeData as CEX_Data
 import pandas as pd
 
 def arbitrage(date, data, quantity, volatility):

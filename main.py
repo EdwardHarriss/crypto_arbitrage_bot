@@ -1,5 +1,5 @@
 #import src.binance_data as binance_data
-import src.binance_trading as binance_trading
+import src.triangular_arbitrage.binance_trading as binance_trading
 
 if __name__ == "__main__":
 

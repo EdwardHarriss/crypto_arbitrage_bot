@@ -11,7 +11,7 @@ import json
 import pandas as pd
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
-from src.cex_trading import CentralizedExchangeTrading as CEX_Trading
+from src.triangular_arbitrage.cex_trading import CentralizedExchangeTrading as CEX_Trading
 from dotenv import load_dotenv
 from binance.client import Client
 from binance.enums import *
