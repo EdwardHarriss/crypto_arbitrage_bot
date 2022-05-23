@@ -1,16 +1,20 @@
 import pandas as pd
-from datetime import datetime
 
 class CentralizedExchangeData():
 
-    def __init__(self, exchange_name_, base_, minimum_arbitrage_allowance_perc: float, fee_per_transaction_percent: float):
+    def __init__(self, exchange_name_, base_, minimum_arbitrage_allowance_perc: float, fee_per_transaction_percent: float, TIMING_TABLE):
         #setting name and definitions for env
         self.exchange = exchange_name_
         self.min_arb = minimum_arbitrage_allowance_perc
         self.fee = fee_per_transaction_percent
         self.base = base_
-        self.timing_df = pd.DataFrame(columns=['route','direction', 'time'])
         self.current_time = None
+
+        if TIMING_TABLE is not None:
+            self.timing_df = TIMING_TABLE
+        else:
+            self.timing_df = pd.DataFrame(columns=['route','direction', 'time'])
+
 
     def GetArbitrageReturns(self, data, date, quantity, volatility):
         output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain','Volatility'])
