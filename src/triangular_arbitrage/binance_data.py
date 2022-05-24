@@ -18,8 +18,7 @@ import os
 import pymysql
 from sqlalchemy import create_engine
 
-START_TIME = datetime.now()
-WRITING_TIME = datetime.now()
+COUNT = 0
 
 load_dotenv()
 pw = os.getenv('pw')
@@ -37,8 +36,8 @@ def arbitrage(date, data, quantity, volatility):
 
     out_occ = pd.DataFrame({'date':[date],'occ':[len(output_routes)],'btc_vol':[abs(volatility['BTCUSDT'])]})
 
-    output_routes.to_sql('arb_routes',con=CONN, if_exists='append',index=False)
-    out_occ.to_sql('arb_occ',con=CONN, if_exists='append',index=False)
+    output_routes.to_sql('arb_routes_real',con=CONN, if_exists='append',index=False)
+    out_occ.to_sql('arb_occ_real',con=CONN, if_exists='append',index=False)
 
     #Excel writing
     """
@@ -59,15 +58,11 @@ def arbitrage(date, data, quantity, volatility):
     CheckTime(date)
 
 def CheckTime(date):
-    global WRITING_TIME
-    global START_TIME
-    if datetime.strptime(date, '%Y-%m-%d %H:%M:%S') - START_TIME >= timedelta(minutes = 20):
+    global COUNT
+    COUNT = COUNT + 1
+    if COUNT >= 60:
         WriteTimingTable()
-        print("Ending Collection")
-        sys.exit(0)
-    elif datetime.strptime(date, '%Y-%m-%d %H:%M:%S') - WRITING_TIME >= timedelta(minutes = 5):
-        WriteTimingTable()
-        WRITING_TIME = datetime.now()
+        COUNT = 0
 
 def WriteTimingTable():
 
@@ -106,7 +101,7 @@ def WriteTimingTable():
     tmp_df['ave'] = average_time
     tmp_df['occ'] = opp_occ
 
-    tmp_df.to_sql('arb_timing',con=CONN,if_exists ='replace',index=False)
+    tmp_df.to_sql('arb_timing_real',con=CONN,if_exists ='replace',index=False)
 
 """
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
