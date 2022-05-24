@@ -13,11 +13,11 @@ class CentralizedExchangeData():
         if TIMING_TABLE is not None:
             self.timing_df = TIMING_TABLE
         else:
-            self.timing_df = pd.DataFrame(columns=['route','direction', 'time'])
+            self.timing_df = pd.DataFrame(columns=['route','direction', 'times'])
 
 
     def GetArbitrageReturns(self, data, date, quantity, volatility):
-        output = pd.DataFrame(columns=['Time','Exchange','Arbitrage Direction','Cryptocurrency Pairs','Gain','Volatility'])
+        output = pd.DataFrame(columns=['date','route','direction','gain','volatility'])
         for route in self.routes:
             if route[0] == 'sell':
                 p1 = 100/data[route[1]] * (1- (self.fee/100))  #buy
@@ -49,15 +49,15 @@ class CentralizedExchangeData():
                 ave_vol = (abs(vol1)+abs(vol2)+abs(vol3))/3
 
                 sr = ' -> '.join([str(elem) for elem in route])
-                output_data = {'Time' : [date], 'Exchange' : [self.exchange], 'Arbitrage Direction' : [arb_direction], 'Cryptocurrency Pairs' : [route], 'Gain' : [gain], 'Volatility' : [ave_vol]}
+                output_data = {'date' : [date], 'route' : [route], 'direction' : [arb_direction], 'gain' : [gain], 'volatility' : [ave_vol]}
                 output_frame = pd.DataFrame(output_data)
                 output = output.append(output_frame, ignore_index=False)
                 
-                timing = pd.DataFrame({'Route' : [sr], 'Direction' : [arb_direction], 'Time' : [date]})
+                timing = pd.DataFrame({'route' : [sr], 'direction' : [arb_direction], 'times' : [date]})
 
                 frames = [self.timing_df, timing]
                 self.timing_df = pd.concat(frames)
-                self.timing_df = self.timing_df.groupby(['Route','Direction'])['Time'].apply(', '.join).reset_index()    
+                self.timing_df = self.timing_df.groupby(['route','direction'])['times'].apply(', '.join).reset_index()    
 
         print(len(output))
         return output

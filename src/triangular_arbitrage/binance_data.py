@@ -11,17 +11,37 @@ import json
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from src.triangular_arbitrage.cex_data import CentralizedExchangeData as CEX_Data
+import ext.sql as sql
+import pandas as pd
+from dotenv import load_dotenv
+import os
+import pymysql
+from sqlalchemy import create_engine
 
 START_TIME = datetime.now()
 WRITING_TIME = datetime.now()
 
+load_dotenv()
+pw = os.getenv('pw')
+
+CONN = create_engine("mysql+pymysql://" + "root" + ":" + pw + "@" + "localhost" + "/" + "tri_arb_data")
+
+
 def arbitrage(date, data, quantity, volatility):
+    global TIMING_TABLE
     date = datetime.fromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
     BinanceData.GetArbitrageRoutes(data)
-    output = BinanceData.GetArbitrageReturns(data, date, quantity, volatility)
+    output_routes = BinanceData.GetArbitrageReturns(data, date, quantity, volatility)
     TIMING_TABLE = BinanceData.timing_df
+    output_routes['route'] = [','.join(map(str, l)) for l in output_routes['route']]
+
+    out_occ = pd.DataFrame({'date':[date],'occ':[len(output_routes)],'btc_vol':[abs(volatility['BTCUSDT'])]})
+
+    output_routes.to_sql('arb_routes',con=CONN, if_exists='append',index=False)
+    out_occ.to_sql('arb_occ',con=CONN, if_exists='append',index=False)
 
     #Excel writing
+    """
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
     ws = wb['Binance']
     for r in dataframe_to_rows(output, index=False, header=False):
@@ -34,29 +54,35 @@ def arbitrage(date, data, quantity, volatility):
         occ = [date, 'Binance', len(output), abs(volatility['BTCUSDT'])]
         ws.append(occ)
     wb.save("data/Triangular_Arbitrage_Binance.xlsx")
+    """
 
     CheckTime(date)
 
 def CheckTime(date):
-    if START_TIME - datetime.strptime(date, '%Y-%m-%d %H:%M:%S') >= timedelta(minutes = 1):
+    global WRITING_TIME
+    global START_TIME
+    if datetime.strptime(date, '%Y-%m-%d %H:%M:%S') - START_TIME >= timedelta(minutes = 20):
         WriteTimingTable()
         print("Ending Collection")
         sys.exit(0)
-    elif WRITING_TIME - datetime.strptime(date, '%Y-%m-%d %H:%M:%S') >= timedelta(seconds = 10):
+    elif datetime.strptime(date, '%Y-%m-%d %H:%M:%S') - WRITING_TIME >= timedelta(minutes = 5):
         WriteTimingTable()
         WRITING_TIME = datetime.now()
 
 def WriteTimingTable():
+
+    print("Writing Table")
+
     opp_occ = []
     max_length = []
     average_time = []
 
     for col_name,data_df in TIMING_TABLE.iteritems():   #Finding times
-        if col_name == 'Time':
+        if col_name == 'times':
             values_list = data_df.values.tolist()
-            print(TIMING_TABLE.to_string())
             for route in values_list:
                 list_times = route.split(", ")
+                print
                 opp_occ.append(len(list_times))
                 last_time = None
                 i = []
@@ -76,17 +102,20 @@ def WriteTimingTable():
 
 
     tmp_df = TIMING_TABLE
-    tmp_df['Max Length of Time'] = max_length
-    tmp_df['Ave Length of Time'] = average_time
-    tmp_df['Occurances'] = opp_occ
+    tmp_df['max'] = max_length
+    tmp_df['ave'] = average_time
+    tmp_df['occ'] = opp_occ
 
+    tmp_df.to_sql('arb_timing',con=CONN,if_exists ='replace',index=False)
+
+"""
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
     ws = wb['Binance Timing']
     for r in dataframe_to_rows(tmp_df, index=False, header=False):
         ws.append(r)
     wb.save("data/Triangular_Arbitrage_Binance.xlsx")
     print("### closed ###")
-
+"""
 
 def on_message(ws, message):
     message = json.loads(message)
@@ -114,12 +143,11 @@ def handler(sig, frame):
 
 signal.signal(signal.SIGINT, handler)
 
-def BinanceExchange(minimum_arbitrage_allowance_perc, fee_per_transaction_percent, base_):
-    global MIN_ARBITRAGE, FEE, BASE, BinanceData, TIMING_TABLE
+def BinanceExchange(minimum_arbitrage_allowance_perc, fee_per_transaction_percent, base_, TIMING_TABLE):
+    global MIN_ARBITRAGE, FEE, BASE, BinanceData
     MIN_ARBITRAGE = minimum_arbitrage_allowance_perc
     FEE = fee_per_transaction_percent
     BASE = base_
-    TIMING_TABLE = None
 
     BinanceData = CEX_Data('Binance', base_, minimum_arbitrage_allowance_perc, fee_per_transaction_percent, TIMING_TABLE)
 
