@@ -77,7 +77,6 @@ def WriteTimingTable():
             values_list = data_df.values.tolist()
             for route in values_list:
                 list_times = route.split(", ")
-                print
                 opp_occ.append(len(list_times))
                 last_time = None
                 i = []
@@ -100,6 +99,8 @@ def WriteTimingTable():
     tmp_df['max'] = max_length
     tmp_df['ave'] = average_time
     tmp_df['occ'] = opp_occ
+
+    tmp_df = tmp_df.drop('times', 1)
 
     tmp_df.to_sql('arb_timing_real',con=CONN,if_exists ='replace',index=False)
 

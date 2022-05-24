@@ -49,7 +49,7 @@ class CentralizedExchangeData():
                 ave_vol = (abs(vol1)+abs(vol2)+abs(vol3))/3
 
                 sr = ' -> '.join([str(elem) for elem in route])
-                output_data = {'date' : [date], 'route' : [route], 'direction' : [arb_direction], 'gain' : [gain], 'volatility' : [ave_vol]}
+                output_data = {'date' : [date], 'route' : [route], 'direction' : [arb_direction], 'gain' : [gain], 'volatility' : [ave_vol], 'vol1' : [vol1], 'vol2' : [vol2], 'vol3' : [vol3]}
                 output_frame = pd.DataFrame(output_data)
                 output = output.append(output_frame, ignore_index=False)
                 
