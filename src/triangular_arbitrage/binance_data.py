@@ -61,8 +61,8 @@ def CheckTime(date):
     global COUNT
     COUNT = COUNT + 1
     if COUNT >= 60:
-        WriteTimingTable()
         COUNT = 0
+        WriteTimingTable()
 
 def WriteTimingTable():
 
@@ -134,6 +134,10 @@ def on_close(ws, close_status_code, close_msg):
     BinanceExchange(MIN_ARBITRAGE, FEE, BASE, TIMING_TABLE)
 
 def handler(sig, frame):
+    try:
+        WriteTimingTable()
+    except:
+        print("Error in writing table")
     print("Closing")
     sys.exit(0)
 
