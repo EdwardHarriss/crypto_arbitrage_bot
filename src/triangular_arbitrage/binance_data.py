@@ -60,9 +60,12 @@ def arbitrage(date, data, quantity, volatility):
 def CheckTime(date):
     global COUNT
     COUNT = COUNT + 1
-    if COUNT >= 60:
+    if COUNT >= 600:
         COUNT = 0
-        WriteTimingTable()
+        try:
+            WriteTimingTable()
+        except:
+            print("Fail to write table")
 
 def WriteTimingTable():
 
@@ -102,7 +105,7 @@ def WriteTimingTable():
 
     tmp_df = tmp_df.drop('times', 1)
 
-    tmp_df.to_sql('arb_timing_real',con=CONN,if_exists ='replace',index=False)
+    tmp_df.to_sql('arb_timing_real_11',con=CONN,if_exists ='replace',index=False)
 
 """
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
