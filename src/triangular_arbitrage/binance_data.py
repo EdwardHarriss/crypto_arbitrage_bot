@@ -120,7 +120,8 @@ def on_message(ws, message):
     message = json.loads(message)
 
     def run(*args):
-        arbitrage(message[0]['E'], {m['s']: float(m['c']) for m in message}, {m['s']: float(m['v']) for m in message}, {m['s']: float(m['P']) for m in message})
+        print(len(message.index))
+        #arbitrage(message[0]['E'], {m['s']: float(m['c']) for m in message}, {m['s']: float(m['v']) for m in message}, {m['s']: float(m['P']) for m in message})
 
     threading.Thread(target=run).start()
 

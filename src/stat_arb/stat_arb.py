@@ -15,6 +15,8 @@ import ml as lr
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+from statistics import mean
+
 COUNT = 0
 COUNT_TILL = 1440 #1440 for 24 mins
 FIRST_COUNT = True
@@ -114,7 +116,7 @@ def on_FullData(df):
         results_df = pd.DataFrame({'time': [time], 'return': [r1]})
         results_df.to_sql('return_data',con=CONN,if_exists ='append',index=False)
 
-
+ARB = []
 
 def on_message(ws, message):
     message = json.loads(message)
@@ -122,7 +124,6 @@ def on_message(ws, message):
 
     def run(*args):
         DataPreProcessing(df)
-        #arbitrage(message[0]['E'], {m['s']: float(m['c']) for m in message}, {m['s']: float(m['v']) for m in message}, {m['s']: float(m['P']) for m in message})
 
     threading.Thread(target=run).start()
 
