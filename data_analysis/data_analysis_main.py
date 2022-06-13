@@ -6,6 +6,31 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from statsmodels.tsa.stattools import adfuller
+from datetime import datetime, timedelta
+
+def ProdCumm(data, x_col, y_col, x_title, y_title):
+
+    y_values = []
+    x_values = []
+    
+    data.drop(data.tail(4).index,inplace=True)
+
+    index = data.index
+
+    for i in index:
+        x_values.append((i+1)*24)
+
+    y_values = data[y_col].cumprod().to_list()
+    
+    x_values.insert(0,0)
+    y_values.insert(0,1)
+
+    plt.plot(x_values, y_values)
+    plt.xlabel(x_title)
+    plt.ylabel(y_title)
+
+    return x_values, y_values
+
 
 def MovingAverage(sumation, x_values, window_size):
     sumation_df = pd.Series(sumation)
@@ -105,8 +130,36 @@ def LineOfBestFit(x, y, x_title, y_title):
 
 if __name__ == "__main__":
 
-    data = DataImport("tri_arb_data", "arb_routes_real")
-    df_routes = data.GetTable()
+    data = DataImport("binance_data", "return_data")
+    df_returns = data.GetTable()
+
+    #start_date = df_returns["time"].iloc[0]
+    #td = timedelta(minutes=860)
+    #end_date = start_date + td
+    
+    #start_date = datetime.fromtimestamp(start_date/1000).strftime('%Y-%m-%d %H:%M:%S')
+    ##end_date = datetime.fromtimestamp(end_date/1000).strftime('%Y-%m-%d %H:%M:%S')
+
+    #print(start_date)
+
+    df_returns['return'] = df_returns['return'] + 1
+
+    data_max = df_returns['return'].max()
+    data_min = df_returns['return'].min()
+    data_mean = df_returns['return'].mean()
+    data_std = df_returns['return'].std()
+
+    x, y = ProdCumm(df_returns, "time" ,"return", "Minutes Since Launch", "Returns")
+
+    print(y[-1])
+
+
+    print(data_max, data_min, data_mean, data_std)
+
+    plt.show()
+
+
+    #print(df_routes['gain'].std())
 
     #data = DataImport("tri_arb_data", "arb_occ_real")
     #df_occ = data.GetTable()
@@ -117,23 +170,23 @@ if __name__ == "__main__":
 
     #df_occ = df_occ.round({'btc_vol':1})
 
-    df_routes = df_routes.round({'vol2':1})
+    #df_routes = df_routes.round({'vol2':1})
 
-    df_routes = df_routes[~(df_routes['vol2'] > 40)]
+    #df_routes = df_routes[~(df_routes['vol2'] > 40)]
 
 
-    min = int(df_routes['vol2'].min())
-    max = df_routes['vol2'].max()
+    #min = int(df_routes['vol2'].min())
+    #max = df_routes['vol2'].max()
 
     #print(df_routes.head())
 
     #SumDates(df_occ, "Date", "Returns")
 
-    x, y = SumColumns(df_routes, "vol2", "gain", "Pair 2 Volatility %", "Average Arbitrage Returns %", min, max, True)
+    #x, y = SumColumns(df_routes, "vol2", "gain", "Pair 2 Volatility %", "Average Arbitrage Returns %", min, max, True)
 
-    print(adfuller(x))
+    #print(adfuller(x))
 
-    plt.show()
+    #plt.show()
 
     #LineOfBestFit(x, y,"BTC Volatility %", "Average Arbitrage Occurances",)
 

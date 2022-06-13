@@ -1,13 +1,14 @@
-import json
 import requests
 import pandas as pd
+from matplotlib import pyplot as plt
 
 #Want to expand for data collection to find optimal time when APR was at its best
 
 NO_OF_DAYS = 365
-ENDING = 730
+ENDING = 139
 
 LENGTH = NO_OF_DAYS*6
+ENDING = ENDING*6
 
 #Getting Historic Data
 
@@ -86,16 +87,54 @@ df = df.drop("fundingRateBTC", axis=1)
 
 #Finding Profit
 
-fundingRates = df["MaxFundingRate"].tolist()
+df["MaxFundingRate"] = df["MaxFundingRate"] + 1
 
-balance = 100
+fundingRatesCumProd = df["MaxFundingRate"].cumprod().tolist()
 
-for rf in fundingRates:
-    balance = balance * (1+rf)
+x = list()
 
-apr = balance - 100
+for i in range(0, len(fundingRatesCumProd)):
+    x.append(i/6)
+
+apr = (fundingRatesCumProd[-1]-1)*100
 
 print("APR: ", apr, "%")
+
+btc_df = pd.read_csv('binance_btc.csv')
+btc_df = btc_df.iloc[::4, :]
+btc_df = btc_df.iloc[::-1]
+btc_df = btc_df.head(LENGTH)
+btc_df = btc_df.drop("open", axis=1)
+btc_df = btc_df.drop("high", axis=1)
+btc_df = btc_df.drop("low", axis=1)
+btc_df = btc_df.drop("Volume BTC", axis=1)
+btc_df = btc_df.drop("Volume GBP", axis=1)
+btc_df = btc_df.drop("tradecount", axis=1)
+btc_df = btc_df.drop("unix", axis=1)
+btc_df = btc_df.drop("symbol", axis=1)
+btc_df["close"] = btc_df["close"].pct_change()
+btc_df["close"] = btc_df["close"] + 1
+btc = btc_df["close"].cumprod().tolist()
+
+x_btc = list()
+
+for i in range(len(btc)):
+    x_btc.append(i/6)
+
+#print(btc_df.to_string())
+
+fig, ax1 = plt.subplots()
+
+#ax2 = ax1.twinx()
+ax1.plot(x,fundingRatesCumProd)
+#ax2.plot(x_btc, btc, 'g-')
+
+ax1.set_xlabel('Days since start')
+ax1.set_ylabel('Arbitrage Returns', color='b')
+#ax2.set_ylabel('BTC Returns', color='g')
+
+plt.show()
+
 
 
 

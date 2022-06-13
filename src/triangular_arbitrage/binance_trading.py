@@ -113,7 +113,7 @@ def MakeTrade(trade):
 def arbitrage_trading(date, data, quantity):
     #date_format = datetime.fromtimestamp(date/1000)
     date = datetime.fromtimestamp(date/1000).strftime('%Y-%m-%d %H:%M:%S')
-    #date_now = datetime.now()
+    date_now = datetime.now()
     trade, predicted_gain = BinanceTrading.GetArbitrage(data, date, quantity)
     #date_after = datetime.now()
     if trade is not None:

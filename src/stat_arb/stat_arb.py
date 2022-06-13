@@ -18,7 +18,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from statistics import mean
 
 COUNT = 0
-COUNT_TILL = 1440 #1440 for 24 mins
+COUNT_TILL = 1440#1440 for 24 mins
 FIRST_COUNT = True
 load_dotenv()
 pw = os.getenv('pw')
@@ -115,8 +115,6 @@ def on_FullData(df):
 
         results_df = pd.DataFrame({'time': [time], 'return': [r1]})
         results_df.to_sql('return_data',con=CONN,if_exists ='append',index=False)
-
-ARB = []
 
 def on_message(ws, message):
     message = json.loads(message)
