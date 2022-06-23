@@ -111,15 +111,18 @@ def SumColumns(data, column_base, column_sum, x_title, y_title, min, max, averag
     return x_values, sumation
 
 def LineOfBestFit(x, y, x_title, y_title):
+
+    print(y[0:5])
+
     x = np.array(x)
     y = np.array(y)
-    a, b = np.polyfit(x, y, 1)
+    a, b = np.polyfit(np.log(x), y, 1)
 
     plt.plot(x, y, color='purple')
 
     plt.plot(x, a*x+b, color='steelblue', linestyle='--', linewidth=2)
 
-    plt.text(1, 17, 'y = ' + '{:.2f}'.format(b) + ' + {:.2f}'.format(a) + 'x', size=14)
+    plt.text(1, 17, 'y = ' + '{:.2f}'.format(b) + ' + {:.2f}'.format(a) + 'log(x)', size=14)
 
     plt.xlabel(x_title)
     plt.ylabel(y_title)
@@ -130,8 +133,44 @@ def LineOfBestFit(x, y, x_title, y_title):
 
 if __name__ == "__main__":
 
-    data = DataImport("binance_data", "return_data")
-    df_returns = data.GetTable()
+    data = DataImport("tri_arb_data", "arb_routes_real")
+    df_tri = data.GetTable()
+
+    df_tri = df_tri.groupby(['date']).max()
+    df_tri['gain'] = df_tri['gain'].div(100).round(6)
+    df_tri['gain'] = df_tri['gain'] + 1
+    df_tri['gain'] = df_tri['gain'].cumprod()
+
+    print(df_tri.head())
+
+    x = list()
+    for i in range(df_tri.shape[0]):
+        x.append(i)
+
+    y = df_tri['gain'].tolist()
+
+    
+
+    #print(y[0:60])
+
+    #plt.plot(df_returns['gain'].to_list())
+    #plt.show()
+
+    length = 60*10
+
+    x = list()
+    for i in range(length):
+        x.append(i)
+
+    plt.plot(x, y[0:length])
+
+    plt.xlabel("Seconds since start")
+    plt.ylabel("Profit/Loss Percentage")
+
+    plt.show()
+
+    
+    #LineOfBestFit(x, y[0:length], "Seconds since start", "Profit/Loss %")
 
     #start_date = df_returns["time"].iloc[0]
     #td = timedelta(minutes=860)
@@ -142,21 +181,21 @@ if __name__ == "__main__":
 
     #print(start_date)
 
-    df_returns['return'] = df_returns['return'] + 1
+    #df_returns['return'] = df_returns['return'] + 1
 
-    data_max = df_returns['return'].max()
-    data_min = df_returns['return'].min()
-    data_mean = df_returns['return'].mean()
-    data_std = df_returns['return'].std()
+    #data_max = df_returns['return'].max()
+    #data_min = df_returns['return'].min()
+    #data_mean = df_returns['return'].mean()
+    #data_std = df_returns['return'].std()
 
-    x, y = ProdCumm(df_returns, "time" ,"return", "Minutes Since Launch", "Returns")
+    #x, y = ProdCumm(df_returns, "time" ,"return", "Minutes Since Launch", "Returns")
 
-    print(y[-1])
+    #print(y[-1])
 
 
-    print(data_max, data_min, data_mean, data_std)
+    #print(data_max, data_min, data_mean, data_std)
 
-    plt.show()
+    #plt.show()
 
 
     #print(df_routes['gain'].std())

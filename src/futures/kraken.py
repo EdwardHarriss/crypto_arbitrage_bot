@@ -26,6 +26,8 @@ ltc_dict = LTC_pi.json()
 xrp_dict = XRP_pi.json()
 bch_dict = BCH_pi.json()
 
+print(btc_dict)
+
 #converting to dataframe
 
 btc_dict = pd.DataFrame(btc_dict['rates'])
