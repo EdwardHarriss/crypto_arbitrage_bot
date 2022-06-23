@@ -11,7 +11,6 @@ import json
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 from src.triangular_arbitrage.cex_data import CentralizedExchangeData as CEX_Data
-import ext.sql as sql
 import pandas as pd
 from dotenv import load_dotenv
 import os
@@ -36,24 +35,22 @@ def arbitrage(date, data, quantity, volatility):
 
     out_occ = pd.DataFrame({'date':[date],'occ':[len(output_routes)],'btc_vol':[abs(volatility['BTCUSDT'])]})
 
-    output_routes.to_sql('arb_routes_real',con=CONN, if_exists='append',index=False)
-    out_occ.to_sql('arb_occ_real',con=CONN, if_exists='append',index=False)
+    #output_routes.to_sql('arb_routes_real',con=CONN, if_exists='append',index=False)
+    #out_occ.to_sql('arb_occ_real',con=CONN, if_exists='append',index=False)
 
     #Excel writing
-    """
+    
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
     ws = wb['Binance']
-    for r in dataframe_to_rows(output, index=False, header=False):
-        sr = ' -> '.join([str(elem) for elem in r[3]])
-        r[3] = sr
+    for r in dataframe_to_rows(output_routes, index=False, header=False):
         ws.append(r)
 
     ws = wb['Binance Occ.']
-    for r in dataframe_to_rows(output, index=False, header=False):
-        occ = [date, 'Binance', len(output), abs(volatility['BTCUSDT'])]
+    for r in dataframe_to_rows(out_occ, index=False, header=False):
+        occ = [date, 'Binance', len(output_routes), abs(volatility['BTCUSDT'])]
         ws.append(occ)
     wb.save("data/Triangular_Arbitrage_Binance.xlsx")
-    """
+    
 
     CheckTime(date)
 
@@ -105,23 +102,21 @@ def WriteTimingTable():
 
     tmp_df = tmp_df.drop('times', 1)
 
-    tmp_df.to_sql('arb_timing_real_11',con=CONN,if_exists ='replace',index=False)
+   # tmp_df.to_sql('arb_timing_real_11',con=CONN,if_exists ='replace',index=False)
 
-"""
+
     wb = load_workbook(filename="data/Triangular_Arbitrage_Binance.xlsx")
     ws = wb['Binance Timing']
     for r in dataframe_to_rows(tmp_df, index=False, header=False):
         ws.append(r)
     wb.save("data/Triangular_Arbitrage_Binance.xlsx")
     print("### closed ###")
-"""
 
 def on_message(ws, message):
     message = json.loads(message)
 
     def run(*args):
-        print(len(message.index))
-        #arbitrage(message[0]['E'], {m['s']: float(m['c']) for m in message}, {m['s']: float(m['v']) for m in message}, {m['s']: float(m['P']) for m in message})
+        arbitrage(message[0]['E'], {m['s']: float(m['c']) for m in message}, {m['s']: float(m['v']) for m in message}, {m['s']: float(m['P']) for m in message})
 
     threading.Thread(target=run).start()
 

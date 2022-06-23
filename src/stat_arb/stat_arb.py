@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine, text
 import pymysql
-import ml as lr
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import load_workbook
+
+
+import src.stat_arb.ml as lr
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -18,7 +22,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from statistics import mean
 
 COUNT = 0
-COUNT_TILL = 1440#1440 for 24 mins
+COUNT_TILL = 5#1440 for 24 mins
 FIRST_COUNT = True
 load_dotenv()
 pw = os.getenv('pw')
@@ -114,7 +118,14 @@ def on_FullData(df):
         time = BUY_POSITIONS.loc[BUY_POSITIONS.index[0], 'E']
 
         results_df = pd.DataFrame({'time': [time], 'return': [r1]})
-        results_df.to_sql('return_data',con=CONN,if_exists ='append',index=False)
+        #results_df.to_sql('return_data',con=CONN,if_exists ='append',index=False)
+
+
+        wb = load_workbook(filename="data/Stat_Arb_Binance.xlsx")
+        ws = wb['Stat Arb']
+        for r in dataframe_to_rows(results_df, index=False, header=False):
+            ws.append(r)
+        wb.save("data/Stat_Arb_Binance.xlsx")
 
 def on_message(ws, message):
     message = json.loads(message)

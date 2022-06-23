@@ -71,11 +71,11 @@ def LogRegressionTraining():
 
     logistic_regression.fit(X_train,y_train.values.ravel())
     y_pred=logistic_regression.predict(X_test)
-    confusion_matrix = pd.crosstab(y_test['y'], y_pred, rownames=['Actual'], colnames=['Predicted'])
-    sn.heatmap(confusion_matrix, annot=True)
+    #confusion_matrix = pd.crosstab(y_test['y'], y_pred, rownames=['Actual'], colnames=['Predicted'])
+    #sn.heatmap(confusion_matrix, annot=True)
 
     print('Accuracy: ',metrics.accuracy_score(y_test, y_pred))
-    plt.show()
+    #plt.show()
 
 def LogRegressionTesting(X, df):
     global logistic_regression
